@@ -1,0 +1,24 @@
+# ── 系统文件 ──────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── 构建产物 ──────────────────────────────
+target/
+*.jar
+*.class
+.flattened-pom.xml
+
+# ── 日志与运行产物 ────────────────────────
+*.log
+logs/
+nohup.out
+
+# ── IDE ──────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/

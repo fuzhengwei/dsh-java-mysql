@@ -1,0 +1,6 @@
+id: dsh-java-mysql-plugin
+name: DSH MySQL Plugin
+version: 0.1.0
+author: Xiaofuge
+description: Safe MySQL metadata, read-query, EXPLAIN and performance tools for DeepSeek Harness.
+entrypoint: cn.xiaofuge.dsh.mysql.plugin.DshMysqlPlugin

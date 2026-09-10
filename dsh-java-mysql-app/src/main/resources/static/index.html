@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DSH MySQL Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">DS</div>
+      <div><strong>MySQL Studio</strong><span>Powered by Harness</span></div>
+    </div>
+    <button class="primary block" id="newConversation">＋ 新对话</button>
+    <div class="section-label">对话记录</div>
+    <div id="conversationList" class="item-list conversation-list"></div>
+  </aside>
+
+  <main class="main">
+    <header class="main-header">
+      <div>
+        <div class="title-row">
+          <span id="statusDot" class="dot"></span>
+          <h1 id="currentName">未选择连接</h1>
+        </div>
+        <p id="currentDetail">选择连接后开始对话与操作</p>
+      </div>
+      <div class="header-actions">
+        <select id="connectionSelect" class="select"></select>
+        <button class="ghost" id="addConnection">＋ 连接</button>
+        <button class="ghost danger" id="deleteConnection">删除</button>
+      </div>
+    </header>
+
+    <div id="workspace" class="workspace">
+      <section class="center">
+        <div id="chatMessages" class="chat-scroll"></div>
+        <div class="composer-wrap">
+          <div id="streamStatus" class="stream-status hidden">
+            <span id="streamStatusText"><span class="status-spinner"></span>AI 正在思考</span>
+          </div>
+          <div class="composer">
+            <textarea id="chatInput" rows="1" placeholder="询问你的数据库，例如：列出所有表及行数"></textarea>
+            <div class="composer-bar">
+              <span class="composer-hint"><kbd>⌘</kbd>+<kbd>↵</kbd> 发送 · AI 只能只读查询</span>
+              <button class="send-btn" id="sendMessage" title="发送">↑</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="resource-sidebar">
+        <div class="resource-scroll">
+          <div class="resource-header">
+            <b>MySQL 上下文</b>
+            <button class="ghost small" id="refreshResource">刷新</button>
+          </div>
+          <section class="panel">
+            <div class="panel-title"><span>连接信息</span></div>
+            <div id="connectionCard" class="panel-body muted">未连接</div>
+          </section>
+          <section class="panel">
+            <div class="panel-title"><span>库表信息</span><button class="ghost small" id="refreshTables">刷新</button></div>
+            <div id="tableList" class="panel-body muted">加载中...</div>
+            <div id="tableDetail" class="panel-body muted hidden"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-title"><span>监控</span><button class="ghost small" id="refreshPerformance">刷新</button></div>
+            <div id="metrics" class="metric-grid"></div>
+            <div id="processes" class="panel-body muted">暂无进程数据</div>
+          </section>
+          <section class="panel">
+            <div class="panel-title"><span>SQL 控制台</span></div>
+            <textarea id="sql" spellcheck="false" placeholder="SELECT * FROM ..."></textarea>
+            <div class="editor-actions">
+              <label class="switch"><input type="checkbox" id="allowWrite"><span></span><small>写操作</small></label>
+              <div><button class="ghost small" id="explain">EXPLAIN</button><button class="primary small" id="runSql">执行</button></div>
+            </div>
+            <div id="result" class="panel-body muted">无结果</div>
+          </section>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="modal hidden" id="connectionModal">
+    <form class="modal-card" id="connectionForm">
+      <h2>MySQL 连接</h2>
+      <label>名称<input name="name" required placeholder="本地开发库"></label>
+      <div class="form-row"><label>主机<input name="host" required value="192.168.1.108"></label><label>端口<input name="port" type="number" value="13306"></label></div>
+      <div class="form-row"><label>数据库<input name="database" required value="mysql"></label><label>用户名<input name="username" required value="root"></label></div>
+      <label>密码<input name="password" type="password" placeholder="可留空"></label>
+      <div class="modal-actions"><button type="button" class="ghost" id="cancelModal">取消</button><button class="primary">保存并测试</button></div>
+    </form>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
