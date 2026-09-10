@@ -7,12 +7,8 @@ public record MySqlAdminProperties(
         String dataDirectory,
         int queryTimeoutSeconds,
         int maxRows,
-        Harness harness,
-        Ai ai
+        Harness harness
 ) {
     public record Harness(String baseUrl) {
-    }
-
-    public record Ai(String baseUrl, String apiKey, String model) {
     }
 }

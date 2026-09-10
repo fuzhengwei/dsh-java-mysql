@@ -13,7 +13,10 @@
       <div><strong>MySQL Studio</strong><span>Powered by Harness</span></div>
     </div>
     <button class="primary block" id="newConversation">＋ 新对话</button>
-    <div class="section-label">对话记录</div>
+    <div class="section-label">
+      <span>对话记录</span>
+      <input id="conversationSearch" class="conv-search" type="search" placeholder="搜索对话…">
+    </div>
     <div id="conversationList" class="item-list conversation-list"></div>
   </aside>
 
@@ -30,12 +33,15 @@
         <select id="connectionSelect" class="select"></select>
         <button class="ghost" id="addConnection">＋ 连接</button>
         <button class="ghost danger" id="deleteConnection">删除</button>
+        <button class="ghost icon-btn" id="toggleTheme" title="切换主题">🌙</button>
+        <button class="ghost icon-btn" id="toggleResource" title="收起/展开资源栏">⇥</button>
       </div>
     </header>
 
     <div id="workspace" class="workspace">
       <section class="center">
         <div id="chatMessages" class="chat-scroll"></div>
+        <button id="backToBottom" class="back-to-bottom hidden" title="回到底部">↑ 回到底部</button>
         <div class="composer-wrap">
           <div id="streamStatus" class="stream-status hidden">
             <span id="streamStatusText"><span class="status-spinner"></span>AI 正在思考</span>
@@ -44,7 +50,10 @@
             <textarea id="chatInput" rows="1" placeholder="询问你的数据库，例如：列出所有表及行数"></textarea>
             <div class="composer-bar">
               <span class="composer-hint"><kbd>⌘</kbd>+<kbd>↵</kbd> 发送 · AI 只能只读查询</span>
-              <button class="send-btn" id="sendMessage" title="发送">↑</button>
+              <div class="composer-actions">
+                <button class="ghost small hidden" id="stopStream">停止</button>
+                <button class="send-btn" id="sendMessage" title="发送">↑</button>
+              </div>
             </div>
           </div>
         </div>
@@ -56,23 +65,40 @@
             <b>MySQL 上下文</b>
             <button class="ghost small" id="refreshResource">刷新</button>
           </div>
-          <section class="panel">
+          <nav class="resource-tabs">
+            <button data-resource-tab="tables" class="active">库表</button>
+            <button data-resource-tab="monitor">监控</button>
+            <button data-resource-tab="sql">SQL</button>
+          </nav>
+          <section class="panel" data-tab="tables">
             <div class="panel-title"><span>连接信息</span></div>
             <div id="connectionCard" class="panel-body muted">未连接</div>
           </section>
-          <section class="panel">
+          <section class="panel" data-tab="tables">
             <div class="panel-title"><span>库表信息</span><button class="ghost small" id="refreshTables">刷新</button></div>
+            <div class="panel-filter"><input id="tableSearch" type="search" placeholder="过滤表名…"></div>
             <div id="tableList" class="panel-body muted">加载中...</div>
             <div id="tableDetail" class="panel-body muted hidden"></div>
           </section>
-          <section class="panel">
-            <div class="panel-title"><span>监控</span><button class="ghost small" id="refreshPerformance">刷新</button></div>
+          <section class="panel" data-tab="monitor">
+            <div class="panel-title">
+              <span>监控</span>
+              <span class="panel-title-actions">
+                <label class="switch small-switch"><input type="checkbox" id="autoRefresh"><span></span><small>自动</small></label>
+                <button class="ghost small" id="refreshPerformance">刷新</button>
+              </span>
+            </div>
             <div id="metrics" class="metric-grid"></div>
             <div id="processes" class="panel-body muted">暂无进程数据</div>
           </section>
-          <section class="panel">
-            <div class="panel-title"><span>SQL 控制台</span></div>
-            <textarea id="sql" spellcheck="false" placeholder="SELECT * FROM ..."></textarea>
+          <section class="panel" data-tab="sql">
+            <div class="panel-title"><span>SQL 控制台</span><button class="ghost small" id="toggleHistory">历史</button></div>
+            <div class="sql-editor">
+              <pre id="sqlHighlight" aria-hidden="true"><code></code></pre>
+              <textarea id="sql" spellcheck="false" placeholder="SELECT * FROM ..."></textarea>
+            </div>
+            <div id="sqlSuggestions" class="sql-suggestions hidden"></div>
+            <div id="sqlHistory" class="sql-history hidden"></div>
             <div class="editor-actions">
               <label class="switch"><input type="checkbox" id="allowWrite"><span></span><small>写操作</small></label>
               <div><button class="ghost small" id="explain">EXPLAIN</button><button class="primary small" id="runSql">执行</button></div>
@@ -94,7 +120,25 @@
       <div class="modal-actions"><button type="button" class="ghost" id="cancelModal">取消</button><button class="primary">保存并测试</button></div>
     </form>
   </div>
+  <div class="modal hidden" id="cellModal">
+    <div class="modal-card">
+      <h2 id="cellModalTitle">单元格内容</h2>
+      <pre id="cellModalBody" class="cell-view"></pre>
+      <div class="modal-actions"><button type="button" class="ghost" id="cellModalCopy">复制</button><button type="button" class="primary" id="cellModalClose">关闭</button></div>
+    </div>
+  </div>
+  <div class="modal hidden" id="confirmModal">
+    <div class="modal-card">
+      <h2 id="confirmTitle">确认操作</h2>
+      <p id="confirmMessage" class="muted" style="margin:0"></p>
+      <div class="modal-actions"><button type="button" class="ghost" id="confirmCancel">取消</button><button type="button" class="primary danger-solid" id="confirmOk">确认</button></div>
+    </div>
+  </div>
   <div id="toast" class="toast"></div>
+  <script src="lib/marked.min.js"></script>
+  <script src="lib/purify.min.js"></script>
+  <script src="lib/highlight.min.js"></script>
+  <script src="lib/sql.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

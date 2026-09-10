@@ -107,9 +107,6 @@ Agent 可用工具：
 | `dsh.mysql.query-timeout-seconds` | — | `15` | SQL 执行超时 |
 | `dsh.mysql.max-rows` | — | `500` | 只读查询最大返回行数 |
 | `dsh.mysql.harness.base-url` | `DSH_HARNESS_BASE_URL` | `http://127.0.0.1:8090` | Harness 地址 |
-| `dsh.mysql.ai.base-url` | `DSH_AI_BASE_URL` | `https://api.deepseek.com/v1` | 直连模型 API 地址 |
-| `dsh.mysql.ai.api-key` | `DSH_AI_API_KEY` | 空 | 直连模型 API Key |
-| `dsh.mysql.ai.model` | `DSH_AI_MODEL` | `deepseek-chat` | 直连模型名称 |
 
 ## 安全边界
 

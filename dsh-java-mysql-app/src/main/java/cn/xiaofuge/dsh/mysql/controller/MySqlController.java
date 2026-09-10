@@ -3,7 +3,6 @@ package cn.xiaofuge.dsh.mysql.controller;
 import cn.xiaofuge.dsh.mysql.model.QueryRequest;
 import cn.xiaofuge.dsh.mysql.model.QueryResult;
 import cn.xiaofuge.dsh.mysql.model.ApiException;
-import cn.xiaofuge.dsh.mysql.service.AiAssistantService;
 import cn.xiaofuge.dsh.mysql.service.HarnessAiService;
 import cn.xiaofuge.dsh.mysql.service.HarnessAiStreamService;
 import cn.xiaofuge.dsh.mysql.service.QueryService;
@@ -21,16 +20,13 @@ import java.util.Map;
 @RequestMapping("/api/mysql")
 public class MySqlController {
     private final QueryService queryService;
-    private final AiAssistantService aiAssistantService;
     private final HarnessAiService harnessAiService;
     private final HarnessAiStreamService harnessAiStreamService;
 
     public MySqlController(QueryService queryService,
-                           AiAssistantService aiAssistantService,
                            HarnessAiService harnessAiService,
                            HarnessAiStreamService harnessAiStreamService) {
         this.queryService = queryService;
-        this.aiAssistantService = aiAssistantService;
         this.harnessAiService = harnessAiService;
         this.harnessAiStreamService = harnessAiStreamService;
     }

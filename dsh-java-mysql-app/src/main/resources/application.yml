@@ -14,7 +14,3 @@ dsh:
     max-rows: 500
     harness:
       base-url: ${DSH_HARNESS_BASE_URL:http://127.0.0.1:8090}
-    ai:
-      base-url: ${DSH_AI_BASE_URL:https://api.deepseek.com/v1}
-      api-key: ${DSH_AI_API_KEY:}
-      model: ${DSH_AI_MODEL:deepseek-chat}

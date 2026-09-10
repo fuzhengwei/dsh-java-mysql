@@ -186,11 +186,11 @@ public class QueryService {
         for (int index = 1; index <= metadata.getColumnCount(); index++) {
             columns.add(metadata.getColumnLabel(index));
         }
-        List<Map<String, Object>> values = new ArrayList<>();
+        List<List<Object>> values = new ArrayList<>();
         while (rows.next() && values.size() < properties.maxRows()) {
-            Map<String, Object> row = new LinkedHashMap<>();
+            List<Object> row = new ArrayList<>(columns.size());
             for (int index = 1; index <= metadata.getColumnCount(); index++) {
-                row.put(columns.get(index - 1), rows.getObject(index));
+                row.add(rows.getObject(index));
             }
             values.add(row);
         }
@@ -200,7 +200,16 @@ public class QueryService {
     private List<Map<String, Object>> toMaps(String sql, Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement();
              ResultSet rows = statement.executeQuery(sql)) {
-            return readResultSet(sql, true, rows).rows();
+            QueryResult result = readResultSet(sql, true, rows);
+            List<Map<String, Object>> maps = new ArrayList<>();
+            for (List<Object> row : result.rows()) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                for (int index = 0; index < result.columns().size(); index++) {
+                    map.put(result.columns().get(index), row.get(index));
+                }
+                maps.add(map);
+            }
+            return maps;
         }
     }
 
