@@ -1,0 +1,15 @@
+# dsh-java-mysql 运行镜像
+# 构建上下文为仓库根目录，jar 由 GitHub Action 中的 Maven 步骤提前构建
+FROM eclipse-temurin:17-jre
+
+LABEL org.opencontainers.image.source="https://github.com/fuzhengwei/dsh-java-mysql"
+
+WORKDIR /app
+
+COPY dsh-java-mysql-app/target/dsh-java-mysql-app-*.jar app.jar
+
+EXPOSE 8091
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
