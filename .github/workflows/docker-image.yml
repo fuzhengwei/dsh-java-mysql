@@ -63,6 +63,8 @@ jobs:
           platforms: linux/amd64
           # 打 tag 推送时直接推送镜像
           push: true
+          # 关闭 provenance 证明（OCI 清单），阿里云 ACR 不支持该格式
+          provenance: false
           # 同时推送到 DockerHub 和阿里云镜像库
           tags: |
             fuzhengwei/dsh-java-mysql:${{ steps.meta.outputs.VERSION }}
