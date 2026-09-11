@@ -29,9 +29,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      # 只构建 app 模块（plugin 模块依赖本地 SNAPSHOT 构件 deepseek-harness-java-types，CI 无法解析，且镜像只需要 app 的 jar）
       - name: Build with Maven
         run: |
-          mvn clean package -Dmaven.test.skip=true
+          mvn clean package -pl dsh-java-mysql-app -am -Dmaven.test.skip=true
 
       - name: Extract version from tag
         id: meta
