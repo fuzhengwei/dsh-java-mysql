@@ -33,6 +33,14 @@ public class ConnectionController {
         return response;
     }
 
+    @PutMapping("/{id}")
+    public ConnectionResponse update(@PathVariable("id") String id, @Valid @RequestBody ConnectionRequest request) {
+        ConnectionResponse response = connectionStore.update(id, request);
+        queryService.invalidate(id);
+        queryService.test(response.id());
+        return response;
+    }
+
     @PostMapping("/{id}/test")
     public Map<String, Object> test(@PathVariable("id") String id) {
         queryService.test(id);
@@ -42,5 +50,6 @@ public class ConnectionController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable("id") String id) {
         connectionStore.delete(id);
+        queryService.invalidate(id);
     }
 }

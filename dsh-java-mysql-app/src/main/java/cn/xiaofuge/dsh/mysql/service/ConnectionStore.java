@@ -67,6 +67,14 @@ public class ConnectionStore {
         return toResponse(profile);
     }
 
+    public ConnectionResponse update(String id, ConnectionRequest request) {
+        if (!profiles.containsKey(id)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "连接不存在");
+        }
+        return save(new ConnectionRequest(id, request.name(), request.host(), request.port(),
+                request.database(), request.username(), request.password()));
+    }
+
     public void delete(String id) {
         if (profiles.remove(id) == null) {
             throw new ApiException(HttpStatus.NOT_FOUND, "连接不存在");

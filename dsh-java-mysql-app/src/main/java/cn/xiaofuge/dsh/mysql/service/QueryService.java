@@ -165,6 +165,13 @@ public class QueryService {
         return connectionStore.jdbcArguments(connectionId);
     }
 
+    public void invalidate(String connectionId) {
+        Connection connection = connections.remove(connectionId);
+        if (connection != null) {
+            closeQuietly(connection);
+        }
+    }
+
     private Connection connection(String connectionId) throws SQLException {
         Connection existing = connections.get(connectionId);
         if (existing != null && !existing.isClosed()) {

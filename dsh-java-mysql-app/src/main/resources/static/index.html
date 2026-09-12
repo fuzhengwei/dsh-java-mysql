@@ -32,6 +32,7 @@
       <div class="header-actions">
         <select id="connectionSelect" class="select"></select>
         <button class="ghost" id="addConnection">＋ 连接</button>
+        <button class="ghost" id="editConnection" disabled>编辑</button>
         <button class="ghost danger" id="deleteConnection">删除</button>
         <button class="ghost icon-btn" id="toggleTheme" title="切换主题">🌙</button>
         <button class="ghost icon-btn" id="toggleResource" title="收起/展开资源栏">⇥</button>
@@ -112,11 +113,11 @@
 
   <div class="modal hidden" id="connectionModal">
     <form class="modal-card" id="connectionForm">
-      <h2>MySQL 连接</h2>
+      <h2 id="connectionModalTitle">添加 MySQL 连接</h2>
       <label>名称<input name="name" required placeholder="本地开发库"></label>
       <div class="form-row"><label>主机<input name="host" required value="192.168.1.108"></label><label>端口<input name="port" type="number" value="13306"></label></div>
       <div class="form-row"><label>数据库<input name="database" required value="mysql"></label><label>用户名<input name="username" required value="root"></label></div>
-      <label>密码<input name="password" type="password" placeholder="可留空"></label>
+      <label>密码<input name="password" type="password" placeholder="可留空；编辑时留空则保留原密码"></label>
       <div class="modal-actions"><button type="button" class="ghost" id="cancelModal">取消</button><button class="primary">保存并测试</button></div>
     </form>
   </div>

@@ -13,6 +13,8 @@ const state = {
   conversations: [],
   activeConversationId: null,
   activeStream: null,
+  chatFollowBottom: true,
+  chatLastScrollTop: 0,
   tablePage: 1,
   lastQuery: null
 };
@@ -123,6 +125,8 @@ function renderConnections() {
     if (connection.id === state.connectionId) option.selected = true;
     select.appendChild(option);
   });
+  $('#editConnection').disabled = !state.connectionId;
+  $('#deleteConnection').disabled = !state.connectionId;
 }
 
 function loadConversations() {
@@ -172,19 +176,25 @@ function renderConversations() {
     return;
   }
   matches.forEach(conversation => {
-    const button = document.createElement('button');
-    button.className = 'item' + (conversation.id === state.activeConversationId ? ' active' : '');
+    const item = document.createElement('div');
+    item.className = 'item' + (conversation.id === state.activeConversationId ? ' active' : '');
     const connection = state.connections.find(item => item.id === conversation.connectionId);
-    button.innerHTML = `<b class="title">${escapeHtml(conversation.title)}</b>
-      <span class="meta">${conversation.messages.length} 条 · ${relativeTime(conversation.updatedAt)}${connection ? ` · ${escapeHtml(connection.name)}` : ''}</span>
-      <span class="item-actions"><button class="ghost tiny" data-action="rename">重命名</button><button class="ghost tiny danger" data-action="delete">删除</button></span>`;
-    button.onclick = event => {
-      const action = event.target.closest('[data-action]')?.dataset.action;
-      if (action === 'rename') return renameConversation(conversation.id);
-      if (action === 'delete') return deleteConversation(conversation.id);
-      selectConversation(conversation.id);
-    };
-    container.appendChild(button);
+    item.innerHTML = `<button class="item-main" type="button">
+        <b class="title">${escapeHtml(conversation.title)}</b>
+        <span class="meta">${conversation.messages.length} 条 · ${relativeTime(conversation.updatedAt)}${connection ? ` · ${escapeHtml(connection.name)}` : ''}</span>
+      </button>
+      <span class="item-actions" aria-label="对话操作">
+        <button class="item-action" type="button" data-action="rename" title="重命名" aria-label="重命名">重命名</button>
+        <button class="item-action danger" type="button" data-action="delete" title="删除" aria-label="删除">删除</button>
+      </span>`;
+    item.querySelector('.item-main').onclick = () => selectConversation(conversation.id);
+    item.querySelectorAll('[data-action]').forEach(actionButton => {
+      actionButton.onclick = () => {
+        if (actionButton.dataset.action === 'rename') renameConversation(conversation.id);
+        if (actionButton.dataset.action === 'delete') deleteConversation(conversation.id);
+      };
+    });
+    container.appendChild(item);
   });
 }
 
@@ -225,6 +235,7 @@ function selectConversation(id) {
     return;
   }
   state.activeConversationId = id;
+  state.chatFollowBottom = true;
   saveConversations();
   renderConversations();
   renderChatMessages();
@@ -260,6 +271,8 @@ function ensureConnectionConversation() {
 
 function renderChatMessages() {
   const container = $('#chatMessages');
+  const followBottom = state.chatFollowBottom;
+  const previousScrollTop = container.scrollTop;
   container.innerHTML = '';
   const conversation = state.conversations.find(item => item.id === state.activeConversationId);
   if (!conversation?.messages.length) {
@@ -279,7 +292,9 @@ function renderChatMessages() {
     return;
   }
   conversation.messages.forEach(message => container.appendChild(messageNode(message)));
-  container.scrollTop = container.scrollHeight;
+  container.scrollTop = followBottom ? container.scrollHeight : previousScrollTop;
+  state.chatLastScrollTop = container.scrollTop;
+  updateBackToBottom();
 }
 
 function renderStreamingMessage(pending) {
@@ -291,7 +306,7 @@ function renderStreamingMessage(pending) {
     container.appendChild(node);
   }
   const text = node.querySelector('.markdown');
-  if (text) text.innerHTML = markdownToHtml(pending.content || '') + '<span class="stream-cursor">▍</span>';
+  if (text) text.innerHTML = markdownToHtml(pending.content || '') + (pending.streaming ? '<span class="stream-cursor">▍</span>' : '');
   node.querySelector('.steps-wrap')?.remove();
   // 思考/工具步骤始终渲染在正文之前，符合「过程在前、结论在后」的阅读顺序
   node.insertBefore(stepsNode(pending), text);
@@ -320,9 +335,27 @@ function messageNode(message) {
 
 function autoscrollChat(force = false) {
   const container = $('#chatMessages');
+  if (force) state.chatFollowBottom = true;
+  if (state.chatFollowBottom) {
+    container.scrollTop = container.scrollHeight;
+    state.chatLastScrollTop = container.scrollTop;
+  }
+  updateBackToBottom();
+}
+
+function updateBackToBottom() {
+  const container = $('#chatMessages');
   const distance = container.scrollHeight - container.scrollTop - container.clientHeight;
-  if (force || distance < 120) container.scrollTop = container.scrollHeight;
   $('#backToBottom').classList.toggle('hidden', distance < 60);
+}
+
+function handleChatScroll() {
+  const container = $('#chatMessages');
+  const distance = container.scrollHeight - container.scrollTop - container.clientHeight;
+  if (distance <= 4) state.chatFollowBottom = true;
+  else if (container.scrollTop < state.chatLastScrollTop) state.chatFollowBottom = false;
+  state.chatLastScrollTop = container.scrollTop;
+  updateBackToBottom();
 }
 
 function operationNode(message) {
@@ -556,6 +589,7 @@ async function sendMessage() {
   const pending = { id: crypto.randomUUID(), role: 'assistant', content: '', reasoning: '', steps: [], streaming: true };
   conversation.messages.push(pending);
   input.value = '';
+  state.chatFollowBottom = true;
   saveConversations();
   renderConversations();
   renderChatMessages();
@@ -564,11 +598,13 @@ async function sendMessage() {
   try {
     await streamAssistant(conversation.id, text, pending);
     setStreamStatus('已完成');
-    setTimeout(() => setBusy(false), 450);
   } catch (error) {
     pending.content = error.name === 'AbortError' ? '**已停止生成。**' : error.message;
     setStreamStatus('执行失败');
-    setTimeout(() => setBusy(false), 900);
+  } finally {
+    pending.streaming = false;
+    state.activeStream = null;
+    setBusy(false);
   }
   saveConversations();
   renderChatMessages();
@@ -628,6 +664,7 @@ async function streamAssistant(agentId, message, pending) {
           }
           if (event === 'finish' || event === 'done') {
             pending.steps.forEach(item => { if (item.status === 'running') item.status = 'result'; });
+            pending.streaming = false;
           }
           if (event === 'error') pending.content += `\n\n**错误：** ${payload.message || '未知错误'}`;
           render();
@@ -638,8 +675,6 @@ async function streamAssistant(agentId, message, pending) {
       }
     });
   }
-  state.activeStream = null;
-  renderStreamingMessage(pending);
 }
 
 async function runAssistantSql(sql, explain = false) {
@@ -956,26 +991,59 @@ function hideSqlSuggestions() {
 async function saveConnection(event) {
   event.preventDefault();
   const form = new FormData(event.target);
+  const connectionId = event.target.dataset.connectionId;
+  const payload = Object.fromEntries(form);
+  const editing = Boolean(connectionId);
   try {
-    await request('/api/connections', { method: 'POST', body: JSON.stringify(Object.fromEntries(form)) });
+    await request(editing ? `/api/connections/${connectionId}` : '/api/connections', {
+      method: editing ? 'PUT' : 'POST',
+      body: JSON.stringify(payload)
+    });
     $('#connectionModal').classList.add('hidden');
     event.target.reset();
+    delete event.target.dataset.connectionId;
     state.connectionId = null;
     await loadConnections();
-    toast('连接已保存');
+    toast(editing ? '连接已更新' : '连接已保存');
   } catch (error) {
     toast(error.message, true);
   }
 }
 
-$('#addConnection').onclick = () => $('#connectionModal').classList.remove('hidden');
-$('#cancelModal').onclick = () => $('#connectionModal').classList.add('hidden');
+function openConnectionModal(connection = null) {
+  const form = $('#connectionForm');
+  form.reset();
+  if (connection) {
+    form.dataset.connectionId = connection.id;
+    $('#connectionModalTitle').textContent = '编辑 MySQL 连接';
+    form.elements.name.value = connection.name;
+    form.elements.host.value = connection.host;
+    form.elements.port.value = connection.port;
+    form.elements.database.value = connection.database;
+    form.elements.username.value = connection.username;
+  } else {
+    delete form.dataset.connectionId;
+    $('#connectionModalTitle').textContent = '添加 MySQL 连接';
+  }
+  $('#connectionModal').classList.remove('hidden');
+  form.elements.name.focus();
+}
+
+$('#addConnection').onclick = () => openConnectionModal();
+$('#editConnection').onclick = () => {
+  const connection = state.connections.find(item => item.id === state.connectionId);
+  if (connection) openConnectionModal(connection);
+};
+$('#cancelModal').onclick = () => {
+  $('#connectionModal').classList.add('hidden');
+  delete $('#connectionForm').dataset.connectionId;
+};
 $('#connectionForm').onsubmit = saveConnection;
 $('#newConversation').onclick = newConversation;
 $('#conversationSearch').oninput = renderConversations;
 $('#stopStream').onclick = stopStream;
 $('#backToBottom').onclick = () => autoscrollChat(true);
-$('#chatMessages').addEventListener('scroll', () => autoscrollChat());
+$('#chatMessages').addEventListener('scroll', handleChatScroll);
 $('#tableSearch').oninput = renderTables;
 $('#toggleTheme').onclick = () => {
   const root = document.documentElement;
