@@ -4,7 +4,6 @@ Thumbs.db
 
 # ── 构建产物 ──────────────────────────────
 target/
-*.jar
 *.class
 .flattened-pom.xml
 
